@@ -26,10 +26,6 @@ module pragma.modules.scenekit;
 
 import :texture;
 
-extern DLLCLIENT CEngine *c_engine;
-extern DLLCLIENT ClientState *client;
-extern DLLCLIENT CGame *c_game;
-
 static std::optional<std::string> get_abs_error_texture_path()
 {
 	std::string errTexPath = "materials\\error.dds";
@@ -56,7 +52,7 @@ static std::optional<std::string> prepare_texture(std::shared_ptr<Texture> &tex,
 	if(tex == nullptr || tex->IsLoaded() == false) {
 		tex = nullptr;
 		if(defaultTexture.has_value()) {
-			auto &texManager = static_cast<msys::CMaterialManager &>(client->GetMaterialManager()).GetTextureManager();
+			auto &texManager = static_cast<msys::CMaterialManager &>(pragma::get_client_state()->GetMaterialManager()).GetTextureManager();
 			auto ptrTex = texManager.LoadAsset(*defaultTexture);
 			if(ptrTex != nullptr) {
 				texName = *defaultTexture;
@@ -75,7 +71,7 @@ static std::optional<std::string> prepare_texture(std::shared_ptr<Texture> &tex,
 	{
 	TextureManager::LoadInfo loadInfo {};
 	loadInfo.flags = TextureLoadFlags::LoadInstantly;
-	static_cast<CMaterialManager&>(client->GetMaterialManager()).GetTextureManager().Load(*c_engine,texInfo->name,loadInfo);
+	static_cast<CMaterialManager&>(pragma::get_client_state()->GetMaterialManager()).GetTextureManager().Load(*pragma::get_cengine(),texInfo->name,loadInfo);
 	if(tex->IsLoaded() == false)
 	return get_abs_error_texture_path();
 	}
@@ -89,7 +85,7 @@ static std::optional<std::string> prepare_texture(std::shared_ptr<Texture> &tex,
 		if(umath::is_flag_set(inFlags, PreparedTextureInputFlags::CanBeEnvMap) == false)
 			return {};
 		// Image is a cubemap, which Cycles doesn't support! We'll have to convert it to a equirectangular image and use that instead.
-		auto &shader = static_cast<pragma::ShaderCubemapToEquirectangular &>(*c_engine->GetShader("cubemap_to_equirectangular"));
+		auto &shader = static_cast<pragma::ShaderCubemapToEquirectangular &>(*pragma::get_cengine()->GetShader("cubemap_to_equirectangular"));
 		auto equiRectMap = shader.CubemapToEquirectangularTexture(*vkTex);
 		vkTex = equiRectMap;
 		img = &vkTex->GetImage();
@@ -208,7 +204,7 @@ static std::optional<std::string> prepare_texture(std::shared_ptr<Texture> &tex,
 	}
 	absPath = "";
 	// Save the DDS image and make sure the file exists
-	if(c_game->SaveImage(*img, ddsPath, imgWriteInfo) && FileManager::FindAbsolutePath(ddsPath + ".dds", absPath)) {
+	if(pragma::get_client_game()->SaveImage(*img, ddsPath, imgWriteInfo) && FileManager::FindAbsolutePath(ddsPath + ".dds", absPath)) {
 		outSuccess = true;
 		outConverted = true;
 		return absPath;
@@ -259,7 +255,7 @@ static std::optional<std::string> prepare_texture(std::shared_ptr<Texture> &texI
 
 std::optional<std::string> pragma::modules::scenekit::prepare_texture(const std::string &texPath, const std::optional<std::string> &defaultTexture, bool translucent)
 {
-	auto &texManager = static_cast<msys::CMaterialManager &>(client->GetMaterialManager()).GetTextureManager();
+	auto &texManager = static_cast<msys::CMaterialManager &>(pragma::get_client_state()->GetMaterialManager()).GetTextureManager();
 	auto ptex = texManager.LoadAsset(texPath);
 	auto flags = PreparedTextureInputFlags::CanBeEnvMap;
 	PreparedTextureOutputFlags retFlags;

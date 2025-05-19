@@ -46,9 +46,6 @@ import :shader;
 
 using namespace pragma::modules;
 
-extern DLLCLIENT CEngine *c_engine;
-extern DLLCLIENT CGame *c_game;
-
 scenekit::Cache::ShaderInfo::ShaderInfo() {}
 
 scenekit::Scene::Scene(pragma::scenekit::Scene &rtScene) : m_rtScene {rtScene.shared_from_this()}
@@ -296,7 +293,7 @@ pragma::scenekit::PShader scenekit::Cache::CreateShader(Material &mat, const std
 
 #if 0
 	// Make sure all textures have finished loading
-	static_cast<CMaterialManager&>(client->GetMaterialManager()).GetTextureManager().WaitForTextures();
+	static_cast<CMaterialManager&>(get_client_state()->GetMaterialManager()).GetTextureManager().WaitForTextures();
 
 	TextureInfo *diffuseMap = nullptr;
 	if(ustring::compare(mat.GetShaderIdentifier(),"skybox",false))
@@ -501,7 +498,7 @@ pragma::scenekit::PShader scenekit::Cache::CreateShader(Material &mat, const std
 				Color color {static_cast<int16_t>(pt->color.at(0)),static_cast<int16_t>(pt->color.at(1)),static_cast<int16_t>(pt->color.at(2)),static_cast<int16_t>(pt->color.at(3))};
 				ptShader->SetColor(color);
 
-				auto *pShader = static_cast<pragma::ShaderParticle*>(c_engine->GetShader("particle").get());
+				auto *pShader = static_cast<pragma::ShaderParticle*>(pragma::get_cengine()->GetShader("particle").get());
 				if(pShader)
 				{
 					auto renderFlags = ShaderParticle::RenderFlags::None;

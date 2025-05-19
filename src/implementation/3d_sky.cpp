@@ -27,14 +27,12 @@ import :scene;
 
 using namespace pragma::modules;
 
-extern DLLCLIENT CGame *c_game;
-
 void scenekit::Scene::Add3DSkybox(pragma::CSceneComponent &gameScene, pragma::CSkyCameraComponent &skyCam, const Vector3 &camPos)
 {
 	std::unordered_map<CBaseEntity *, std::unordered_set<ModelSubMesh *>> entMeshes;
 	auto fIterateRenderQueue = [&entMeshes](pragma::rendering::RenderQueue &renderQueue) {
 		for(auto &item : renderQueue.queue) {
-			auto *ent = static_cast<CBaseEntity *>(c_game->GetEntityByLocalIndex(item.entity));
+			auto *ent = static_cast<CBaseEntity *>(pragma::get_client_game()->GetEntityByLocalIndex(item.entity));
 			if(!ent)
 				continue;
 			auto renderC = ent->GetComponent<pragma::CRenderComponent>();
@@ -53,8 +51,8 @@ void scenekit::Scene::Add3DSkybox(pragma::CSceneComponent &gameScene, pragma::CS
 	auto translucentRenderQueue = pragma::rendering::RenderQueue::Create("unirender_3d_sky_translucent");
 
 	pragma::rendering::RenderMask inclusionMask, exclusionMask;
-	c_game->GetPrimaryCameraRenderMask(inclusionMask, exclusionMask);
-	auto mask = c_game->GetInclusiveRenderMasks();
+	pragma::get_client_game()->GetPrimaryCameraRenderMask(inclusionMask, exclusionMask);
+	auto mask = pragma::get_client_game()->GetInclusiveRenderMasks();
 	mask |= inclusionMask;
 	mask &= ~exclusionMask;
 

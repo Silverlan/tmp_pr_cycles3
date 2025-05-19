@@ -44,10 +44,6 @@ import pragma.scenekit;
 import :scene;
 import :subdivision;
 
-extern DLLCLIENT CEngine *c_engine;
-extern DLLCLIENT ClientState *client;
-extern DLLCLIENT CGame *c_game;
-
 enum class PreparedTextureInputFlags : uint8_t { None = 0u, CanBeEnvMap = 1u };
 REGISTER_BASIC_BITWISE_OPERATORS(PreparedTextureInputFlags)
 enum class PreparedTextureOutputFlags : uint8_t { None = 0u, Envmap = 1u };
@@ -77,7 +73,7 @@ static std::optional<std::string> prepare_texture(TextureInfo *texInfo, bool &ou
 	if(tex == nullptr || tex->IsLoaded() == false) {
 		tex = nullptr;
 		if(defaultTexture.has_value()) {
-			auto &texManager = static_cast<msys::CMaterialManager &>(client->GetMaterialManager()).GetTextureManager();
+			auto &texManager = static_cast<msys::CMaterialManager &>(pragma::get_client_state()->GetMaterialManager()).GetTextureManager();
 			auto ptrTex = texManager.LoadAsset(*defaultTexture);
 			if(ptrTex != nullptr) {
 				texName = *defaultTexture;
@@ -96,7 +92,7 @@ static std::optional<std::string> prepare_texture(TextureInfo *texInfo, bool &ou
 	{
 	TextureManager::LoadInfo loadInfo {};
 	loadInfo.flags = TextureLoadFlags::LoadInstantly;
-	static_cast<CMaterialManager&>(client->GetMaterialManager()).GetTextureManager().Load(*c_engine,texInfo->name,loadInfo);
+	static_cast<CMaterialManager&>(pragma::get_client_state()->GetMaterialManager()).GetTextureManager().Load(*pragma::get_cengine(),texInfo->name,loadInfo);
 	if(tex->IsLoaded() == false)
 	return get_abs_error_texture_path();
 	}
@@ -110,7 +106,7 @@ static std::optional<std::string> prepare_texture(TextureInfo *texInfo, bool &ou
 		if(umath::is_flag_set(inFlags, PreparedTextureInputFlags::CanBeEnvMap) == false)
 			return {};
 		// Image is a cubemap, which Cycles doesn't support! We'll have to convert it to a equirectangular image and use that instead.
-		auto &shader = static_cast<pragma::ShaderCubemapToEquirectangular &>(*c_engine->GetShader("cubemap_to_equirectangular"));
+		auto &shader = static_cast<pragma::ShaderCubemapToEquirectangular &>(*pragma::get_cengine()->GetShader("cubemap_to_equirectangular"));
 		auto equiRectMap = shader.CubemapToEquirectangularTexture(*vkTex);
 		vkTex = equiRectMap;
 		img = &vkTex->GetImage();
@@ -204,7 +200,7 @@ static std::optional<std::string> prepare_texture(TextureInfo *texInfo, bool &ou
 	}
 	absPath = "";
 	// Save the DDS image and make sure the file exists
-	if(c_game->SaveImage(*img, ddsPath, imgWriteInfo) && FileManager::FindAbsolutePath(ddsPath + ".dds", absPath)) {
+	if(pragma::get_client_game()->SaveImage(*img, ddsPath, imgWriteInfo) && FileManager::FindAbsolutePath(ddsPath + ".dds", absPath)) {
 		outSuccess = true;
 		outConverted = true;
 		return absPath;
@@ -617,7 +613,7 @@ Material *pragma::modules::scenekit::Cache::GetMaterial(pragma::CModelComponent 
 pragma::scenekit::PShader pragma::modules::scenekit::Cache::CreateShader(const std::string &meshName, Model &mdl, ModelSubMesh &subMesh, BaseEntity *optEnt, uint32_t skinId) const
 {
 	// Make sure all textures have finished loading
-	static_cast<msys::CMaterialManager &>(client->GetMaterialManager()).GetTextureManager().WaitForAllPendingCompleted();
+	static_cast<msys::CMaterialManager &>(pragma::get_client_state()->GetMaterialManager()).GetTextureManager().WaitForAllPendingCompleted();
 
 	auto *mat = optEnt ? GetMaterial(*optEnt, subMesh, skinId) : GetMaterial(mdl, subMesh, skinId);
 	if(mat == nullptr)

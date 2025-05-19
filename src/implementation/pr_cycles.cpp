@@ -84,8 +84,6 @@ import :shader;
 import :texture;
 import :progressive_refinement;
 
-extern DLLCLIENT CGame *c_game;
-
 using namespace pragma::modules;
 
 static void sync_light(BaseEntity &ent, pragma::scenekit::Light &light)
@@ -125,7 +123,7 @@ static void sync_light(BaseEntity &ent, pragma::scenekit::Light &light)
 
 static void setup_light_sources(scenekit::Scene &scene, const std::function<bool(BaseEntity &)> &lightFilter = nullptr)
 {
-	EntityIterator entIt {*c_game};
+	EntityIterator entIt {*pragma::get_client_game()};
 	entIt.AttachFilter<TEntityIteratorFilterComponent<pragma::CLightComponent>>();
 	for(auto *ent : entIt) {
 		auto lightC = ent->GetComponent<pragma::CLightComponent>();
@@ -234,7 +232,7 @@ static void initialize_cycles_geometry(pragma::CSceneComponent &gameScene, pragm
 	util::BSPTree *bspTree = nullptr;
 	util::BSPTree::Node *node = nullptr;
 	if(cullObjectsOutsidePvs && camData.has_value()) {
-		EntityIterator entItWorld {*c_game};
+		EntityIterator entItWorld {*pragma::get_client_game()};
 		entItWorld.AttachFilter<TEntityIteratorFilterComponent<pragma::CWorldComponent>>();
 		auto it = entItWorld.begin();
 		auto *entWorld = (it != entItWorld.end()) ? *it : nullptr;
@@ -310,7 +308,7 @@ static void initialize_cycles_geometry(pragma::CSceneComponent &gameScene, pragm
 	}
 	else {
 		// All entities
-		EntityIterator entIt {*c_game};
+		EntityIterator entIt {*pragma::get_client_game()};
 		entIt.AttachFilter<TEntityIteratorFilterComponent<pragma::CRenderComponent>>();
 		entIt.AttachFilter<TEntityIteratorFilterComponent<pragma::CModelComponent>>();
 		entIt.AttachFilter<EntityIteratorFilterUser>(entSceneFilter);
@@ -325,7 +323,7 @@ static void initialize_cycles_geometry(pragma::CSceneComponent &gameScene, pragm
 
 	// Particle Systems
 #if 0
-	EntityIterator entItPt {*c_game};
+	EntityIterator entItPt {*pragma::get_client_game()};
 	entItPt.AttachFilter<TEntityIteratorFilterComponent<pragma::CParticleSystemComponent>>();
 	entItPt.AttachFilter<EntityIteratorFilterUser>(entSceneFilter);
 	for(auto *ent : entItPt)
@@ -382,7 +380,7 @@ static void initialize_cycles_scene_from_game_scene(pragma::CSceneComponent &gam
 	}
 
 	// 3D Sky
-	EntityIterator entIt3dSky {*c_game};
+	EntityIterator entIt3dSky {*pragma::get_client_game()};
 	entIt3dSky.AttachFilter<TEntityIteratorFilterComponent<pragma::CSkyCameraComponent>>();
 	for(auto *ent : entIt3dSky) {
 		auto skyc = ent->GetComponent<pragma::CSkyCameraComponent>();
@@ -741,7 +739,7 @@ PRAGMA_EXPORT void pr_cycles_render_image(const pragma::rendering::cycles::Scene
 	if(scene == nullptr)
 		return;
 	auto aspectRatio = renderImageSettings.width / static_cast<float>(renderImageSettings.height);
-	initialize_cycles_scene_from_game_scene(*c_game->GetScene(), *scene, renderImageInfo.camPose.GetOrigin(), renderImageInfo.camPose.GetRotation(), renderImageInfo.equirectPanorama, renderImageInfo.viewProjectionMatrix, renderImageInfo.nearZ, renderImageInfo.farZ, renderImageInfo.fov,
+	initialize_cycles_scene_from_game_scene(*pragma::get_client_game()->GetScene(), *scene, renderImageInfo.camPose.GetOrigin(), renderImageInfo.camPose.GetRotation(), renderImageInfo.equirectPanorama, renderImageInfo.viewProjectionMatrix, renderImageInfo.nearZ, renderImageInfo.farZ, renderImageInfo.fov,
 	  aspectRatio, static_cast<SceneFlags>(renderImageSettings.sceneFlags), entFilter, nullptr, renderImageInfo.entityList);
 	scene->Finalize();
 	std::string err;
@@ -796,9 +794,9 @@ PRAGMA_EXPORT void pr_cycles_bake_lightmaps(const pragma::rendering::cycles::Sce
 	auto scene = setup_scene(pragma::scenekit::Scene::RenderMode::BakeDiffuseLighting, renderImageSettings);
 	if(scene == nullptr)
 		return;
-	auto &gameScene = *c_game->GetScene();
+	auto &gameScene = *pragma::get_client_game()->GetScene();
 	setup_light_sources(*scene, [&gameScene](BaseEntity &ent) -> bool { return static_cast<CBaseEntity &>(ent).IsInScene(gameScene); });
-	EntityIterator entIt {*c_game};
+	EntityIterator entIt {*pragma::get_client_game()};
 	entIt.AttachFilter<TEntityIteratorFilterComponent<pragma::CLightMapReceiverComponent>>();
 	for(auto *ent : entIt)
 		scene->AddLightmapBakeTarget(*ent);

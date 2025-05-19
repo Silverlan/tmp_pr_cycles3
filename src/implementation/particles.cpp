@@ -25,9 +25,6 @@ module pragma.modules.scenekit;
 import pragma.scenekit;
 import :scene;
 
-extern DLLCLIENT CEngine *c_engine;
-extern DLLCLIENT CGame *c_game;
-
 using namespace pragma::modules;
 
 static float get_particle_extent(float radius) { return sqrt(umath::pow2(radius) * 2.0); }
@@ -108,7 +105,7 @@ void scenekit::Cache::AddParticleSystem(pragma::CParticleSystemComponent &ptc, c
 	shaderInfo.particleSystem = &ptc;
 	std::string meshName = "particleMesh" + std::to_string(ptc.GetEntity().GetLocalIndex());
 	auto *spriteSheetAnim = ptc.GetSpriteSheetAnimation();
-	auto curTime = c_game->CurTime();
+	auto curTime = pragma::get_client_game()->CurTime();
 	auto &particles = ptc.GetRenderParticleData();
 	auto &animData = ptc.GetParticleAnimationData();
 	auto numParticles = ptc.GetRenderParticleCount();

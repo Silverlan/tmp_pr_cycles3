@@ -19,8 +19,6 @@ module;
 module pragma.modules.scenekit;
 import :progressive_refinement;
 
-extern DLLCLIENT CEngine *c_engine;
-
 using namespace pragma::modules::scenekit;
 
 DenoiseTexture::DenoiseTexture(uint32_t w, uint32_t h)
@@ -100,7 +98,7 @@ ProgressiveTexture::~ProgressiveTexture()
 {
 	if(m_cbThink.IsValid())
 		m_cbThink.Remove();
-	c_engine->GetRenderContext().KeepResourceAliveUntilPresentationComplete(m_cmdBuffer);
+	pragma::get_cengine()->GetRenderContext().KeepResourceAliveUntilPresentationComplete(m_cmdBuffer);
 }
 std::shared_ptr<prosper::Texture> ProgressiveTexture::GetTexture() const { return m_texture; }
 void ProgressiveTexture::Initialize(pragma::scenekit::Renderer &renderer)
@@ -110,7 +108,7 @@ void ProgressiveTexture::Initialize(pragma::scenekit::Renderer &renderer)
 	m_tileSize = m_renderer->GetTileManager().GetTileSize();
 	auto res = scene.GetResolution();
 
-	auto &context = c_engine->GetRenderContext();
+	auto &context = pragma::get_cengine()->GetRenderContext();
 	auto img = CreateImage(res.x, res.y, true);
 	m_image = img;
 
@@ -136,11 +134,11 @@ void ProgressiveTexture::Initialize(pragma::scenekit::Renderer &renderer)
 	m_texture = tex;
 
 	// m_denoiseTexture = std::make_unique<DenoiseTexture>(w,h);
-	m_cbThink = c_engine->AddCallback("Think", FunctionCallback<void>::Create([this]() { Update(); }));
+	m_cbThink = pragma::get_cengine()->AddCallback("Think", FunctionCallback<void>::Create([this]() { Update(); }));
 }
 std::shared_ptr<prosper::IImage> ProgressiveTexture::CreateImage(uint32_t width, uint32_t height, bool onDevice) const
 {
-	auto &context = c_engine->GetRenderContext();
+	auto &context = pragma::get_cengine()->GetRenderContext();
 	prosper::util::ImageCreateInfo imgCreateInfo {};
 	imgCreateInfo.width = width;
 	imgCreateInfo.height = height;
@@ -174,7 +172,7 @@ void ProgressiveTexture::Update()
 	auto &imgData = **it;
 	imgData.WriteImageData(tile.x, tile.y, tile.w, tile.h, 0, 0, tile.data.size() * sizeof(tile.data.front()), tile.data.data());
 
-	auto &context = c_engine->GetRenderContext();
+	auto &context = pragma::get_cengine()->GetRenderContext();
 	context.WaitForFence(*m_fence);
 	auto res = m_cmdBuffer->StartRecording(false, false);
 	assert(res);
