@@ -270,6 +270,7 @@ if platform == "win32":
 
 	cmake_args.append("-DDEPENDENCY_CYCLES_GLOG_INCLUDE=" +glog_root +"/build")
 	cmake_args.append("-DDEPENDENCY_CYCLES_GLOG_LIBRARY=" +glog_root +"/build/" +build_config +"/glog.lib")
+	cmake_args.append("-DDEPENDENCY_CYCLES_GLOG_BINRARY_LOCATION=" +glog_root +"/build/" +build_config)
 
 ########## gflags ##########
 if platform == "win32":

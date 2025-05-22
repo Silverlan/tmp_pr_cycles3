@@ -27,7 +27,10 @@ if platform == "linux":
 	cyclesDepsRoot = cyclesRoot +"/lib/linux_x64"
 else:
 	cyclesDepsRoot = cyclesRoot +"/lib/windows_x64"
-cyclesLibDir = cyclesRoot +"/install/lib"
+if platform == "win32":
+	cyclesLibDir = cyclesRoot +"/install"
+else:
+	cyclesLibDir = cyclesRoot +"/install/lib"
 
 lastBuildCommit = None
 lastbuildshaFile = cyclesRoot +"/lastbuildsha"
@@ -153,6 +156,7 @@ if lastBuildCommit != curCommitId:
 	else:
 		cmake_configure("..",generator,args)
 		cmake_build(build_config)
+		cmake_build(build_config,targets=["install"])
 
 	with open(lastbuildshaFile, 'w') as filetowrite:
 		filetowrite.write(curCommitId)
