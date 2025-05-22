@@ -27,6 +27,7 @@ if platform == "linux":
 	cyclesDepsRoot = cyclesRoot +"/lib/linux_x64"
 else:
 	cyclesDepsRoot = cyclesRoot +"/lib/windows_x64"
+cyclesLibDir = cyclesRoot +"/install/lib"
 
 lastBuildCommit = None
 lastbuildshaFile = cyclesRoot +"/lastbuildsha"
@@ -111,9 +112,9 @@ if lastBuildCommit != curCommitId:
 	args = []
 	if platform == "linux":
 		zlib = zlib_root +"/build/libz.a"
-		args.append("-DWITH_CYCLES_CUDA_BINARIES=OFF")
-		args.append("-DWITH_CYCLES_DEVICE_OPTIX=OFF")
-		args.append("-DWITH_CYCLES_DEVICE_CUDA=OFF")
+		args.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
+		args.append("-DWITH_CYCLES_DEVICE_OPTIX=ON")
+		args.append("-DWITH_CYCLES_DEVICE_CUDA=ON")
 	else:
 		zlib = zlib_lib
 		args.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
@@ -176,6 +177,7 @@ cmake_args.append("-DDEPENDENCY_CYCLES_DEPENDENCIES_LOCATION=" +cyclesDepsRoot +
 cmake_args.append("-DDEPENDENCY_OPENEXR_INCLUDE=" +cyclesDepsRoot + "/openexr/include")
 cmake_args.append("-DDEPENDENCY_OPENEXR_IMATH_INCLUDE=" +cyclesDepsRoot + "/imath/include")
 
+cmake_args.append("-DDEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION=" +cyclesLibDir)
 if platform == "linux":
 	cmake_args.append("-DDEPENDENCY_CYCLES_LIBRARY_LOCATION=" +cyclesRoot +"/build/lib")
 

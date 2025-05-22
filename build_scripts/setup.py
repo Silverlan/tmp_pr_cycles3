@@ -43,7 +43,7 @@ if use_prebuilt_binaries:
 	cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_INCLUDE=" +oidn_root +"/include")
 	if platform == "linux":
 		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_LIBRARY=" +oidn_root +"/lib/libOpenImageDenoise.so")
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/lib/libOpenImageDenoise_core.so.2.3.0")
+		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/lib/libOpenImageDenoise_core.so.2.2.2")
 	else:
 		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_LIBRARY=" +oidn_root +"/lib/openimagedenoise.lib")
 		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/lib/OpenImageDenoise_core.lib")
