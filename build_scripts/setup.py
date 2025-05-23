@@ -234,6 +234,7 @@ else:
 	print_msg("Downloading prebuilt cycles binaries...")
 	os.chdir(install_dir)
 	install_prebuilt_binaries("https://github.com/Silverlan/UniRender_Cycles/releases/download/latest/")
+	cmake_args.append("-DPR_UNIRENDER_WITH_CYCLES=0")
 
 os.chdir(deps_dir)
 
