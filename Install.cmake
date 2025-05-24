@@ -17,14 +17,13 @@ pr_install_targets(util_raytracing)
 # assets
 pr_install_directory("${CMAKE_CURRENT_LIST_DIR}/assets/" INSTALL_DIR "modules")
 
-if(PR_UNIRENDER_WITH_CYCLES)
-	# render_raytracing tool
-	pr_install_targets(render_raytracing render_raytracing_lib)
-endif()
-
-
 # Cycles
 if(PR_UNIRENDER_WITH_CYCLES)
+    pr_install_component("UniRender_cycles")
+
+	# render_raytracing tool
+	pr_install_targets(render_raytracing render_raytracing_lib)
+    
     pr_install_targets(UniRender_cycles INSTALL_DIR "${CYCLES_INSTALL_DIR}")
 
     pr_install_create_directory("${CYCLES_INSTALL_DIR}/cache/kernels")
