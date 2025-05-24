@@ -40,7 +40,8 @@ if(PR_UNIRENDER_WITH_CYCLES)
     if(UNIX)
         # Just install them all
         # TODO: Filter the ones we actually need
-        pr_install_directory("${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}/" INSTALL_DIR "${CYCLES_INSTALL_DIR}")
+        pr_install_directory("${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}/" INSTALL_DIR "${CYCLES_INSTALL_DIR}/" PATTERN "*" PATTERN "*.ptx" EXCLUDE PATTERN "*.cubin" EXCLUDE)
+        pr_install_directory("${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}/" INSTALL_DIR "${CYCLES_INSTALL_DIR}/lib/" PATTERN "*.ptx" PATTERN "*.cubin")
     else()
         pr_install_binary(cycles_boost_thread WIN "boost_thread-vc142-mt-x64-1_82.dll" BIN_DIR "${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}" INSTALL_DIR "${CYCLES_INSTALL_DIR}")
         pr_install_binary(cycles_embree WIN "embree4.dll" BIN_DIR "${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}" INSTALL_DIR "${CYCLES_INSTALL_DIR}")
