@@ -28,7 +28,7 @@ if(PR_UNIRENDER_WITH_CYCLES)
 
     pr_install_create_directory("${CYCLES_INSTALL_DIR}/cache/kernels")
     if(NOT "${DEPENDENCY_CYCLES_BUILD_LOCATION}" STREQUAL "")
-        pr_install_directory("${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}/lib/" INSTALL_DIR "${CYCLES_INSTALL_DIR}/lib" PATTERN "*.zst" PATTERN "CMakeFiles" EXCLUDE PATTERN "cycles_kernel.dir" EXCLUDE PATTERN "osl" EXCLUDE PATTERN "x64" EXCLUDE)
+        pr_install_directory("${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}/lib/" INSTALL_DIR "${CYCLES_INSTALL_DIR}/lib")
     endif()
     if(NOT "${DEPENDENCY_CYCLES_ROOT}" STREQUAL "")
         pr_install_directory("${DEPENDENCY_CYCLES_ROOT}/src/kernel" INSTALL_DIR "${CYCLES_INSTALL_DIR}/source")
