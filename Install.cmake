@@ -60,6 +60,7 @@ if(PR_UNIRENDER_WITH_CYCLES)
     # Required for util_raytracing
     if(UNIX)
         pr_install_binary(cycles_openimagedenoise LIN "libOpenImageDenoise.so" BIN_DIR "${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}")
+        pr_install_binary(cycles_openimagedenoise_core LIN "libOpenImageDenoise_core.so.2.2.2" BIN_DIR "${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}")
         pr_install_binary(cycles_osd_gpu LIN "libosdGPU.so" BIN_DIR "${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}")
         pr_install_binary(cycles_osd_cpu LIN "libosdCPU.so" BIN_DIR "${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}")
         pr_install_binary(cycles_tbb LIN "libtbb.so" BIN_DIR "${DEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION}")
