@@ -805,7 +805,7 @@ PRAGMA_EXPORT void pr_cycles_bake_lightmaps(const pragma::rendering::cycles::Sce
 	if(renderImageSettings.renderJob) {
 		std::string path = "render/lightmaps/";
 		auto fileName = path + "lightmap.prt";
-		auto rootPath = util::Path::CreatePath(FileManager::GetProgramPath()).GetString() + path;
+		auto rootPath = util::Path::CreatePath(filemanager::get_program_write_path()).GetString() + path;
 		pragma::scenekit::Scene::SerializationData serializationData {};
 		serializationData.outputFileName = fileName;
 		DataStream ds {};
@@ -973,7 +973,7 @@ void PRAGMA_EXPORT pragma_initialize_lua(Lua::Interface &l)
 		     auto &scene = Lua::Check<scenekit::Scene>(l, 1);
 
 		     auto fileName = path + "lightmap.prt";
-		     auto rootPath = util::Path::CreatePath(FileManager::GetProgramPath()).GetString() + path;
+		     auto rootPath = util::Path::CreatePath(filemanager::get_program_write_path()).GetString() + path;
 		     pragma::scenekit::Scene::SerializationData serializationData {};
 		     serializationData.outputFileName = fileName;
 		     DataStream ds {};

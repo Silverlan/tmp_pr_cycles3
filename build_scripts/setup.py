@@ -245,7 +245,7 @@ if not Path(utilocio_root).is_dir():
     os.chdir(root +"/external_libs")
     git_clone("https://github.com/Silverlan/util_ocio.git","util_ocio")
 os.chdir(utilocio_root)
-reset_to_commit("0212aaa174ce92ef7ad82a35e70400d57da83120")
+reset_to_commit("7c6d49a8acc2c582b8c63096ef52c41a3115a0de")
 
 cmake_args.append("-DDEPENDENCY_UTIL_OCIO_INCLUDE=" +utilocio_root +"/include")
 
@@ -317,6 +317,6 @@ if not Path(unirender_root).is_dir():
     git_clone("https://github.com/Silverlan/UniRender.git","util_raytracing")
 
 os.chdir(unirender_root)
-reset_to_commit("c48da0ce24765df319456b3f9676c76331b6e3d1")
+reset_to_commit("1965f723b84c3c125763ee59e540de26138a2475")
 
 cmake_args.append("-DDEPENDENCY_UTIL_RAYTRACING_INCLUDE=" +unirender_root +"/include")
