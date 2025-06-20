@@ -12,14 +12,14 @@ import subprocess
 # - Update the versions of tbb, oidn, ocio, oiio, opensubdiv libraries in setup.py to match cycles versions
 # - Go to https://github.com/blender/cycles/tree/main/lib for the commit of the cycles version
 #   - Grab the commit ids for linux_x64 and windows_x64 and apply them to cycles_lib_*_x64_commit_sha in setup.py
-cycles_commit_sha = "cf016abb670b255ea25f38fddaf53c78e5cbb8f3" # Version 4.1.1
+cycles_commit_sha = "f81bf6e48c22ac4184c15f99d9a045716abdc215" # Version 4.4.0
 
 ########## cycles ##########
 os.chdir(deps_dir)
 cyclesRoot = deps_dir +"/cycles"
 if not Path(cyclesRoot).is_dir():
 	print_msg("cycles not found. Downloading...")
-	git_clone("https://github.com/Silverlan/cycles.git",branch="rollback/4.1.1")
+	git_clone("https://github.com/blender/cycles.git")
 
 os.chdir(cyclesRoot)
 
@@ -41,9 +41,8 @@ targetCommit = cycles_commit_sha
 if lastBuildCommit != targetCommit:
 	print_msg("Downloading cycles dependencies...")
 	subprocess.run(["git","fetch"],check=True)
+	subprocess.run(["git","reset","--hard",targetCommit],check=True)
 	if platform == "win32":
-		subprocess.run(["git","reset","--hard",targetCommit],check=True)
-
 		# Turn off cycles hydra render delegate
 		cyclesCmakePath = cyclesRoot +"/CMakeLists.txt"
 		strIdx = open(cyclesCmakePath, 'r').read().find('"Build Cycles Hydra render delegate" OFF')
@@ -66,21 +65,12 @@ if lastBuildCommit != targetCommit:
 		command = [python_interpreter, scriptPath, "--no-cycles"]
 		subprocess.run(command)
 
-if platform == "linux":
-	# Building the cycles executable causes build errors. We don't need it, but unfortunately cycles doesn't provide us with a
-	# way to disable it, so we'll have to make some changes to the CMake configuration file.
-	#appCmakePath = cyclesRoot +"/src/app/CMakeLists.txt"
-	#strIdx = open(appCmakePath, 'r').read().find('if(WITH_CYCLES_STANDALONE)')
-	#if strIdx != -1:
-	#	replace_text_in_file(appCmakePath,'if(WITH_CYCLES_STANDALONE)','if(false)')
-	print("")
-else:
-	# We need to add the --allow-unsupported-compiler flag to a cycles CMake configuration file manually,
-	# otherwise compilation will fail for newer versions of Visual Studio.
-	kernelCmakePath = cyclesRoot +"/src/kernel/CMakeLists.txt"
-	strIdx = open(kernelCmakePath, 'r').read().find('--allow-unsupported-compiler')
-	if strIdx == -1:
-		replace_text_in_file(kernelCmakePath,'${CUDA_NVCC_FLAGS}','${CUDA_NVCC_FLAGS} --allow-unsupported-compiler -D _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH')
+# We need to add the --allow-unsupported-compiler flag to a cycles CMake configuration file manually,
+# otherwise compilation will fail for newer versions of Visual Studio and Clang.
+kernelCmakePath = cyclesRoot +"/src/kernel/CMakeLists.txt"
+strIdx = open(kernelCmakePath, 'r').read().find('--allow-unsupported-compiler')
+if strIdx == -1:
+	replace_text_in_file(kernelCmakePath,'${CUDA_NVCC_FLAGS}','${CUDA_NVCC_FLAGS} --allow-unsupported-compiler -D _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH')
 
 print_msg("Download dependencies")
 os.chdir(cyclesRoot)
