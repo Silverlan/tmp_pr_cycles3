@@ -234,7 +234,7 @@ if build_cycles:
         git_clone("https://github.com/Silverlan/render_raytracing.git")
 
     os.chdir(rr_tool_root)
-    reset_to_commit("2986c64a48d74ca7abc816092e7c178fe85fc5bd")
+    reset_to_commit("f63abb122c52342158b7e06a625dfcb149e5533c")
 
     additional_build_targets.append("render_raytracing")
 #else:
