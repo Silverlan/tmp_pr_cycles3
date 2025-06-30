@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from sys import platform
+import shutil
 import subprocess
 
 # To update Cycles to a newer version, follow these steps:
@@ -70,7 +71,11 @@ if lastBuildCommit != targetCommit:
 kernelCmakePath = cyclesRoot +"/src/kernel/CMakeLists.txt"
 strIdx = open(kernelCmakePath, 'r').read().find('--allow-unsupported-compiler')
 if strIdx == -1:
+	# CUDA
 	replace_text_in_file(kernelCmakePath,'${CUDA_NVCC_FLAGS}','${CUDA_NVCC_FLAGS} --allow-unsupported-compiler -D _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH')
+	
+	# OptiX
+	replace_text_in_file(kernelCmakePath,"--ptx\n","--ptx --allow-unsupported-compiler -D _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH\n")
 
 print_msg("Download dependencies")
 os.chdir(cyclesRoot)
@@ -104,12 +109,12 @@ curCommitId = subprocess.check_output(["git","rev-parse","HEAD"]).decode(sys.std
 if lastBuildCommit != curCommitId:
 	args = []
 	if platform == "linux":
-		zlib = zlib_root +"/build/libz.a"
+		zlib = get_library_root_dir("zlib") +"build/libz.a"
 		args.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
 		args.append("-DWITH_CYCLES_DEVICE_OPTIX=ON")
 		args.append("-DWITH_CYCLES_DEVICE_CUDA=ON")
 	else:
-		zlib = zlib_lib
+		zlib = get_library_lib_dir("zlib") +"z.lib"
 		args.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
 		args.append("-DWITH_CYCLES_DEVICE_OPTIX=ON")
 		args.append("-DWITH_CYCLES_DEVICE_CUDA=ON")
@@ -153,71 +158,35 @@ if lastBuildCommit != curCommitId:
 else:
 	print_msg("Head commit has not changed, skipping build...")
 
-cmake_args.append("-DDEPENDENCY_CYCLES_INCLUDE=" +deps_dir + "/cycles/src")
-cmake_args.append("-DDEPENDENCY_CYCLES_ROOT=" +deps_dir + "/cycles")
-cmake_args.append("-DDEPENDENCY_CYCLES_BUILD_LOCATION=" +deps_dir + "/cycles/build")
-cmake_args.append("-DDEPENDENCY_CYCLES_ATOMIC_INCLUDE=" +deps_dir + "/cycles/third_party/atomic")
-cmake_args.append("-DDEPENDENCY_CYCLES_OPENIMAGEIO_INCLUDE=" +oiio_root_dir +"/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_PUGIXML_INCLUDE=" +cyclesDepsRoot + "/pugixml/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_OPENIMAGEDENOISE_INCLUDE=" +oidn_root_dir +"/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_OPENEXR_INCLUDE=" +cyclesDepsRoot + "/openexr/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_EMBREE_INCLUDE=" +cyclesDepsRoot + "/embree/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_OSL_INCLUDE=" +cyclesDepsRoot + "/osl/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_TBB_INCLUDE=" +cyclesDepsRoot + "/tbb/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_ZSTD_INCLUDE=" +cyclesDepsRoot + "/zstd/include")
-cmake_args.append("-DDEPENDENCY_CYCLES_OPENVDB_LIBRARY_PATH=" +cyclesDepsRoot + "/openvdb/lib")
-cmake_args.append("-DDEPENDENCY_CYCLES_DEPENDENCIES_LOCATION=" +cyclesDepsRoot + "")
-
-cmake_args.append("-DDEPENDENCY_OPENEXR_INCLUDE=" +cyclesDepsRoot + "/openexr/include")
-cmake_args.append("-DDEPENDENCY_OPENEXR_IMATH_INCLUDE=" +cyclesDepsRoot + "/imath/include")
-
-cmake_args.append("-DDEPENDENCY_CYCLES_LIBRARY_INSTALL_LOCATION=" +cyclesLibDir)
 if platform == "linux":
-	cmake_args.append("-DDEPENDENCY_CYCLES_LIBRARY_LOCATION=" +cyclesRoot +"/build/lib")
-
-	cmake_args.append("-DDEPENDENCY_CYCLES_TBB_LIBRARY=" +cyclesDepsRoot + "/tbb/lib/libtbb.so")
-	cmake_args.append("-DDEPENDENCY_CYCLES_ZSTD_LIBRARY=" +cyclesDepsRoot + "/zstd/lib/libzstd.a")
-	cmake_args.append("-DDEPENDENCY_CYCLES_EMBREE_LIBRARY=" +cyclesDepsRoot + "/embree/lib/libembree4.so")
-	cmake_args.append("-DDEPENDENCY_CYCLES_OPENCOLORIO_LIBRARY=" +cyclesDepsRoot + "/opencolorio/lib/libOpenColorIO.so")
-	cmake_args.append("-DDEPENDENCY_CYCLES_OPENIMAGEIO_LIBRARY=" +cyclesDepsRoot + "/openimageio/lib/libOpenImageIO.so")
-	cmake_args.append("-DDEPENDENCY_CYCLES_OPENIMAGEDENOISE_LIBRARY=" +cyclesDepsRoot + "/openimagedenoise/lib/libopenimagedenoise.so")
-	cmake_args.append("-DDEPENDENCY_CYCLES_IMATH_LIBRARY=" +cyclesDepsRoot + "/imath/lib/libImath.so")
-	cmake_args.append("-DDEPENDENCY_JPEG_LIBRARY=" +cyclesDepsRoot + "/jpeg/lib/libjpeg.a")
-	cmake_args.append("-DDEPENDENCY_TIFF_LIBRARY=" +cyclesDepsRoot + "/tiff/lib/libtiff.a")
-	cmake_args.append("-DDEPENDENCY_CYCLES_LPNG_LIBRARY=" +cyclesDepsRoot + "/png/lib/libpng.a")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_IMATH_LIBRARY=" +cyclesDepsRoot + "/imath/lib/libImath.so")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_UTIL_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/libOpenEXR.so")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_ILMTHREAD_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/libIlmThread.so")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_IEX_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/libIex.so")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/libOpenEXR.so")
-	cmake_args.append("-DDEPENDENCY_BOOST_THREAD_SHARED_LIBRARY=" +cyclesDepsRoot + "/boost/lib/libboost_thread.so")
-
-	# Prebuilt binary locations
-	# cmake_args.append("-DDEPENDENCY_CYCLES_TBB_LIBRARY=" +cyclesDepsRoot + "/tbb/lib/libtbb.a")
-	# cmake_args.append("-DDEPENDENCY_JPEG_LIBRARY=" +cyclesDepsRoot + "/jpeg/lib/libjpeg.a")
-	# cmake_args.append("-DDEPENDENCY_TIFF_LIBRARY=" +cyclesDepsRoot + "/tiff/lib/libtiff.a")
-	# cmake_args.append("-DDEPENDENCY_OPENEXR_IMATH_LIBRARY=" +cyclesDepsRoot + "/imath/lib/libImath.a")
-	# cmake_args.append("-DDEPENDENCY_OPENEXR_UTIL_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/libOpenEXR.a")
-	# cmake_args.append("-DDEPENDENCY_OPENEXR_ILMTHREAD_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/libIlmThread.a")
-	# cmake_args.append("-DDEPENDENCY_OPENEXR_IEX_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/libIex.a")
+	cycles_lib_dir = cyclesRoot +"/lib/linux_x64/"
 else:
-	cmake_args.append("-DDEPENDENCY_CYCLES_LIBRARY_LOCATION=" +cyclesRoot +"/build/lib/" +build_config +"")
-	cmake_args.append("-DDEPENDENCY_CYCLES_TBB_LIBRARY=" +cyclesDepsRoot + "/tbb/lib/tbb.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_ZSTD_LIBRARY=" +cyclesDepsRoot + "/zstd/lib/zstd_static.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_EMBREE_LIBRARY=" +cyclesDepsRoot + "/embree/lib/embree4.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_OPENCOLORIO_LIBRARY=" +cyclesDepsRoot + "/opencolorio/lib/OpenColorIO.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_OPENIMAGEIO_LIBRARY=" +cyclesDepsRoot + "/OpenImageIO/lib/OpenImageIO.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_OPENIMAGEDENOISE_LIBRARY=" +cyclesDepsRoot + "/openimagedenoise/lib/openimagedenoise.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_IMATH_LIBRARY=" +cyclesDepsRoot + "/imath/lib/imath.lib")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_UTIL_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/OpenEXRUtil_s.lib")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_IMATH_LIBRARY=" +cyclesDepsRoot + "/imath/lib/Imath.lib")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_ILMTHREAD_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/IlmThread_s.lib")
-	cmake_args.append("-DDEPENDENCY_OPENEXR_IEX_LIBRARY=" +cyclesDepsRoot + "/openexr/lib/Iex_s.lib")
-	cmake_args.append("-DDEPENDENCY_BOOST_THREAD_SHARED_LIBRARY=" +cyclesDepsRoot + "/boost/lib/boost_thread-vc142-mt-x64-1_82.lib")
+	cycles_lib_dir = cyclesRoot +"/lib/windows_x64/"
+copy_prebuilt_directory(cycles_lib_dir +"alembic", "alembic")
+copy_prebuilt_directory(cycles_lib_dir +"boost", "boost_cycles")
+copy_prebuilt_directory(cycles_lib_dir +"embree", "embree")
+copy_prebuilt_directory(cycles_lib_dir +"jpeg", "jpeg")
+copy_prebuilt_directory(cycles_lib_dir +"llvm", "llvm")
+copy_prebuilt_directory(cycles_lib_dir +"openexr", "openexr")
+copy_prebuilt_directory(cycles_lib_dir +"openvdb", "openvdb")
+copy_prebuilt_directory(cycles_lib_dir +"png", "png")
+copy_prebuilt_directory(cycles_lib_dir +"tiff", "tiff")
+copy_prebuilt_directory(cycles_lib_dir +"zstd", "zstd")
 
-	cmake_args.append("-DDEPENDENCY_JPEG_LIBRARY=" +cyclesDepsRoot + "/jpeg/lib/libjpeg.lib")
-	cmake_args.append("-DDEPENDENCY_TIFF_LIBRARY=" +cyclesDepsRoot + "/tiff/lib/libtiff.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_LPNG_LIBRARY=" +cyclesDepsRoot + "/png/lib/libpng.lib")
+copy_prebuilt_directory(cyclesRoot +"/third_party/atomic", dest_dir=get_library_include_dir("cycles"))
+copy_prebuilt_directory(cyclesRoot +"/third_party/cuew", dest_dir=get_library_include_dir("cycles"))
+copy_prebuilt_directory(cyclesRoot +"/third_party/hipew", dest_dir=get_library_include_dir("cycles"))
+copy_prebuilt_directory(cyclesRoot +"/third_party/libc_compat", dest_dir=get_library_include_dir("cycles"))
+copy_prebuilt_directory(cyclesRoot +"/third_party/mikktspace", dest_dir=get_library_include_dir("cycles"))
+copy_prebuilt_directory(cyclesRoot +"/third_party/sky", dest_dir=get_library_include_dir("cycles"))
+
+copy_prebuilt_binaries(cyclesRoot +"/build/lib", "cycles")
+copy_prebuilt_binaries(cyclesRoot +"/install/lib", "cycles")
+
+copy_files(["*.ptx", "*.cubin", "*.zst"], cyclesRoot +"/install/lib", get_library_root_dir("cycles") +"/lib/lib")
+
+copy_prebuilt_directory(cyclesRoot +"/install/source", dest_dir=get_library_root_dir("cycles") +"/source")
+copy_prebuilt_headers(cyclesRoot +"/src", "cycles")
 
 additional_build_targets.append("UniRender_cycles")
 

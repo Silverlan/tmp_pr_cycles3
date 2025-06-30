@@ -2,6 +2,7 @@ import os
 import tarfile
 import subprocess
 import argparse
+import shutil
 from sys import platform
 from pathlib import Path
 
@@ -35,59 +36,33 @@ if use_prebuilt_binaries:
 		subprocess.run(["git", "sparse-checkout", "set", "openimagedenoise/", "tbb/", "opencolorio/", "openimageio/", "opensubdiv/", "imath/"], check=True)
 		subprocess.run(["git", "checkout", clone_commit_sha], check=True)
 
+	cycles_lib_dir = cycles_deps_dir +"/" +clone_dir_name
+	copy_prebuilt_directory(cycles_lib_dir +"/imath", "imath")
+	copy_prebuilt_directory(cycles_lib_dir +"/opencolorio", "opencolorio")
+	copy_prebuilt_directory(cycles_lib_dir +"/openimagedenoise", "openimagedenoise")
+	copy_prebuilt_directory(cycles_lib_dir +"/openimageio", "openimageio")
+	copy_prebuilt_directory(cycles_lib_dir +"/opensubdiv", "opensubdiv")
+	copy_prebuilt_directory(cycles_lib_dir +"/tbb", "tbb")
+
 	cycles_deps_dir = cycles_deps_dir +"/" +clone_dir_name
-	cmake_args.append("-DUNIRENDER_PREBUILT_BINARY_LOCATION=" +cycles_deps_dir)
 
 	# OIDN
 	oidn_root = cycles_deps_dir +"/openimagedenoise"
-	cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_INCLUDE=" +oidn_root +"/include")
-	if platform == "linux":
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_LIBRARY=" +oidn_root +"/lib/libOpenImageDenoise.so")
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/lib/libOpenImageDenoise_core.so.2.2.2")
-	else:
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_LIBRARY=" +oidn_root +"/lib/openimagedenoise.lib")
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/lib/OpenImageDenoise_core.lib")
 
 	# TBB
 	tbb_root = cycles_deps_dir +"/tbb"
-	if platform == "linux":
-		cmake_args.append("-DDEPENDENCY_TBB_LIBRARY=" +tbb_root +"/lib/libtbb.so")
-	else:
-		cmake_args.append("-DDEPENDENCY_TBB_LIBRARY=" +tbb_root +"/lib/tbb.lib")
 
 	# OpenColorIO
 	ocio_root = cycles_deps_dir +"/opencolorio"
-	cmake_args.append("-DDEPENDENCY_OPENCOLORIO_INCLUDE=" +ocio_root +"/include")
-	if platform == "linux":
-		cmake_args.append("-DDEPENDENCY_OPENCOLORIO_LIBRARY=" +ocio_root +"/lib/libOpenColorIO.so")
-	else:
-		cmake_args.append("-DDEPENDENCY_OPENCOLORIO_LIBRARY=" +ocio_root +"/lib/OpenColorIO.lib")
 
 	# Required by OpenColorIO
 	imath_root = cycles_deps_dir +"/imath"
-	cmake_args.append("-DDEPENDENCY_IMATH_INCLUDE=" +imath_root +"/include")
-	if platform == "linux":
-		cmake_args.append("-DDEPENDENCY_IMATH_LIBRARY=" +imath_root +"/lib/libImath.so")
-	else:
-		cmake_args.append("-DDEPENDENCY_IMATH_LIBRARY=" +imath_root +"/lib/Imath.lib")
 
 	# OpenImageIO
 	oiio_root = cycles_deps_dir +"/openimageio"
-	cmake_args.append("-DDEPENDENCY_OPENIMAGEIO_INCLUDE=" +oiio_root +"/include")
-	if platform == "linux":
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEIO_LIBRARY=" +oiio_root +"/lib/libOpenImageIO.so")
-	else:
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEIO_LIBRARY=" +oiio_root +"/lib/OpenImageIO.lib")
 
 	# OpenSubDiv
 	osd_root = cycles_deps_dir +"/opensubdiv"
-	cmake_args.append("-DDEPENDENCY_OPENSUBDIV_INCLUDE=" +osd_root +"/include")
-	if platform == "linux":
-		cmake_args.append("-DDEPENDENCY_OPENSUBDIV_LIBRARY=" +osd_root +"/lib/libosdGPU.so")
-		cmake_args.append("-DDEPENDENCY_OPENSUBDIV_CPU_LIBRARY=" +osd_root +"/lib/libosdCPU.so")
-	else:
-		cmake_args.append("-DDEPENDENCY_OPENSUBDIV_LIBRARY=" +osd_root +"/lib/osdGPU.lib")
-		cmake_args.append("-DDEPENDENCY_OPENSUBDIV_CPU_LIBRARY=" +osd_root +"/lib/osdCPU.lib")
 else:
 	########## ISPC ##########
 	ispc_version = "v1.21.0"
@@ -115,10 +90,7 @@ else:
 			zip_name = "tbb2019_20190605oss_win.zip"
 			http_extract("https://github.com/oneapi-src/oneTBB/releases/download/2019_U8/" +zip_name)
 
-	if platform == "linux":
-		cmake_args.append("-DDEPENDENCY_TBB_LIBRARY=" +one_tbb_root +"/lib/intel64/gcc4.7/libtbb.so.2")
-	else:
-		cmake_args.append("-DDEPENDENCY_TBB_LIBRARY=" +one_tbb_root +"/lib/intel64/vc14/tbb.lib")
+	if platform == "win32":
 		cp(one_tbb_root +"/bin/intel64/vc14/tbb.dll",one_tbb_root +"/lib/intel64/vc14/")
 
 	########## OIDN ##########
@@ -136,19 +108,6 @@ else:
 
 	cmake_configure("..",generator,["-DTBB_ROOT=" +one_tbb_root,"-DTBB_INCLUDE_DIR=" +one_tbb_root +"/include"])
 	cmake_build(build_config,["OpenImageDenoise"])
-
-	cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_INCLUDE=" +oidn_root +"/include")
-	if platform == "linux":
-		if generator=="Ninja Multi-Config":
-			cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_LIBRARY=" +oidn_root +"/build/"+build_config +"/libOpenImageDenoise.so")
-			cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/build/"+build_config +"/libOpenImageDenoise_core.so")
-		else:
-			cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_LIBRARY=" +oidn_root +"/build/libOpenImageDenoise.so")
-			cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/build/libOpenImageDenoise_core.so")
-
-	else:
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_LIBRARY=" +oidn_root +"/build/" +build_config +"/OpenImageDenoise.lib")
-		cmake_args.append("-DDEPENDENCY_OPENIMAGEDENOISE_CORE_LIBRARY=" +oidn_root +"/build/" +build_config +"/OpenImageDenoise_core.lib")
 
 	########## OCIO ##########
 	os.chdir(deps_dir)
@@ -177,15 +136,6 @@ else:
 
 	cp(ocio_root +"/build/include/OpenColorIO/OpenColorABI.h",ocio_root +"/include/OpenColorIO/")
 
-	cmake_args.append("-DDEPENDENCY_OPENCOLORIO_INCLUDE=" +ocio_root +"/include")
-	if platform == "linux":
-		if generator=="Ninja Multi-Config":
-			cmake_args.append("-DDEPENDENCY_OPENCOLORIO_LIBRARY=" +ocio_root +"/build/src/OpenColorIO/"+build_config +"/libOpenColorIO.so")
-		else:
-			cmake_args.append("-DDEPENDENCY_OPENCOLORIO_LIBRARY=" +ocio_root +"/build/src/OpenColorIO/libOpenColorIO.so")
-	else:
-		cmake_args.append("-DDEPENDENCY_OPENCOLORIO_LIBRARY=" +ocio_root +"/build/src/OpenColorIO/" +build_config +"/OpenColorIO.lib")
-
 	########## OIIO ##########
 	execbuildscript(os.path.dirname(os.path.realpath(__file__)) +"/build_oiio.py")
 	os.chdir(deps_dir)
@@ -206,18 +156,6 @@ else:
 	cmake_configure("..",generator,["-DTBB_ROOT=" +one_tbb_root,"-DTBB_INCLUDE_DIR=" +one_tbb_root +"/include","-D NO_PTEX=1","-D NO_DOC=1","-D NO_OMP=1","-D NO_TBB=1","-D NO_CUDA=1","-D NO_OPENCL=1","-D NO_CLEW=1","-D NO_EXAMPLES=1","-D NO_DX=1"])
 	cmake_build(build_config,["osd_static_cpu","osd_static_gpu"])
 
-	cmake_args.append("-DDEPENDENCY_OPENSUBDIV_INCLUDE=" +subdiv_root +"")
-	if platform == "linux":
-		if generator=="Ninja Multi-Config":
-			cmake_args.append("-DDEPENDENCY_OPENSUBDIV_LIBRARY=" +subdiv_root +"/build/lib/"+build_config+"/libosdGPU.a")
-			cmake_args.append("-DDEPENDENCY_OPENSUBDIV_CPU_LIBRARY=" +subdiv_root +"/build/lib/"+build_config+"/libosdCPU.a")
-		else:
-			cmake_args.append("-DDEPENDENCY_OPENSUBDIV_LIBRARY=" +subdiv_root +"/build/lib/libosdGPU.a")
-			cmake_args.append("-DDEPENDENCY_OPENSUBDIV_CPU_LIBRARY=" +subdiv_root +"/build/lib/libosdCPU.a")
-	else:
-		cmake_args.append("-DDEPENDENCY_OPENSUBDIV_LIBRARY=" +subdiv_root +"/build/lib/" +build_config +"/osdGPU.lib")
-		cmake_args.append("-DDEPENDENCY_OPENSUBDIV_CPU_LIBRARY=" +subdiv_root +"/build/lib/" +build_config +"/osdCPU.lib")
-
 ########## cycles ##########
 
 parser = argparse.ArgumentParser(description='pr_unirender build script', allow_abbrev=False, formatter_class=argparse.ArgumentDefaultsHelpFormatter, epilog="")
@@ -228,13 +166,15 @@ args = vars(args)
 build_cycles = build_all or args["build_cycles"]
 if build_cycles:
 	print_msg("Running cycles build script...")
-	cmake_args.append("-DPR_UNIRENDER_WITH_CYCLES=1")
 	execbuildscript(os.path.dirname(os.path.realpath(__file__)) +"/build_cycles.py")
 else:
 	print_msg("Downloading prebuilt cycles binaries...")
 	os.chdir(install_dir)
+
+	cycles_lib_dir = get_library_root_dir("cycles")
+	mkpath(cycles_lib_dir)
+	os.chdir(cycles_lib_dir)
 	install_prebuilt_binaries("https://github.com/Silverlan/UniRender_Cycles/releases/download/latest/")
-	cmake_args.append("-DPR_UNIRENDER_WITH_CYCLES=0")
 
 os.chdir(deps_dir)
 
@@ -245,9 +185,7 @@ if not Path(utilocio_root).is_dir():
     os.chdir(root +"/external_libs")
     git_clone("https://github.com/Silverlan/util_ocio.git","util_ocio")
 os.chdir(utilocio_root)
-reset_to_commit("7c6d49a8acc2c582b8c63096ef52c41a3115a0de")
-
-cmake_args.append("-DDEPENDENCY_UTIL_OCIO_INCLUDE=" +utilocio_root +"/include")
+reset_to_commit("5855eb2230a957bd2f8733ce518ac9dc33b5b693")
 
 ########## glog ##########
 if platform == "win32":
@@ -269,10 +207,6 @@ if platform == "win32":
 	cp(glog_root +"/src/glog/log_severity.h",glog_root +"/build/glog/")
 	cp(glog_root +"/src/glog/platform.h",glog_root +"/build/glog/")
 
-	cmake_args.append("-DDEPENDENCY_CYCLES_GLOG_INCLUDE=" +glog_root +"/build")
-	cmake_args.append("-DDEPENDENCY_CYCLES_GLOG_LIBRARY=" +glog_root +"/build/" +build_config +"/glog.lib")
-	cmake_args.append("-DDEPENDENCY_CYCLES_GLOG_BINRARY_LOCATION=" +glog_root +"/build/" +build_config)
-
 ########## gflags ##########
 if platform == "win32":
 	os.chdir(deps_dir)
@@ -290,9 +224,6 @@ if platform == "win32":
 
 	cmake_configure("..",generator,["-DCMAKE_POLICY_VERSION_MINIMUM=4.0"])
 	cmake_build(build_config)
-
-	cmake_args.append("-DDEPENDENCY_GFLAGS_INCLUDE=" +gflags_root +"/build_files/include")
-	cmake_args.append("-DDEPENDENCY_GFLAGS_LIBRARY=" +gflags_root +"/build_files/lib/" +build_config +"/gflags_static.lib")
 
 ########## render_raytracing tool ##########
 if build_cycles:
@@ -317,6 +248,4 @@ if not Path(unirender_root).is_dir():
     git_clone("https://github.com/Silverlan/UniRender.git","util_raytracing")
 
 os.chdir(unirender_root)
-reset_to_commit("1965f723b84c3c125763ee59e540de26138a2475")
-
-cmake_args.append("-DDEPENDENCY_UTIL_RAYTRACING_INCLUDE=" +unirender_root +"/include")
+reset_to_commit("730125634f5dcdc0d1c195e1e02d6aa23267fd4c")

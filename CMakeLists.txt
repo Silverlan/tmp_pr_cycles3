@@ -1,7 +1,7 @@
 include(${CMAKE_SOURCE_DIR}/cmake/pr_common.cmake)
 
 set(PR_UNIRENDER_ENABLE_DEPENDENCIES 1 CACHE BOOL "Enable dependencies?")
-set(PR_UNIRENDER_WITH_CYCLES 0 CACHE BOOL "Enable Cycles renderer?")
+set(PR_UNIRENDER_WITH_CYCLES 1 CACHE BOOL "Enable Cycles renderer?")
 set(PR_UNIRENDER_WITH_LUXCORERENDER 0 CACHE BOOL "Enable LuxCoreRender renderer?")
 
 set(PROJ_NAME pr_unirender)
