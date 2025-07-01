@@ -186,7 +186,7 @@ if not Path(utilocio_root).is_dir():
     os.chdir(root +"/external_libs")
     git_clone("https://github.com/Silverlan/util_ocio.git","util_ocio")
 os.chdir(utilocio_root)
-reset_to_commit("5855eb2230a957bd2f8733ce518ac9dc33b5b693")
+reset_to_commit("7bb428df478e1c1eb66e16a1f78cf541f7dab056")
 
 ########## glog ##########
 if platform == "win32":
@@ -235,7 +235,7 @@ if build_cycles:
         git_clone("https://github.com/Silverlan/render_raytracing.git")
 
     os.chdir(rr_tool_root)
-    reset_to_commit("f63abb122c52342158b7e06a625dfcb149e5533c")
+    reset_to_commit("1ae6b62b620c81a5d071fadfd0cf12385d26ee90")
 
     additional_build_targets.append("render_raytracing")
 #else:
@@ -249,4 +249,4 @@ if not Path(unirender_root).is_dir():
     git_clone("https://github.com/Silverlan/UniRender.git","util_raytracing")
 
 os.chdir(unirender_root)
-reset_to_commit("e208b7d284c750b26c30bb9c1b046055e878d3d5")
+reset_to_commit("4fce3a62ae767e60a41b9d26b8116b9d8a5eb854")

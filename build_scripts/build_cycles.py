@@ -180,7 +180,10 @@ copy_prebuilt_directory(cyclesRoot +"/third_party/libc_compat", dest_dir=get_lib
 copy_prebuilt_directory(cyclesRoot +"/third_party/mikktspace", dest_dir=get_library_include_dir("cycles"))
 copy_prebuilt_directory(cyclesRoot +"/third_party/sky", dest_dir=get_library_include_dir("cycles"))
 
-copy_prebuilt_binaries(cyclesRoot +"/build/lib", "cycles")
+cycles_build_lib_dir = cyclesRoot +"/build/lib"
+if platform == "win32":
+	cycles_build_lib_dir += "/RelWithDebInfo"
+copy_prebuilt_binaries(cycles_build_lib_dir, "cycles")
 copy_prebuilt_binaries(cyclesRoot +"/install/lib", "cycles")
 
 copy_files(["*.ptx", "*.cubin", "*.zst"], cyclesRoot +"/install/lib", get_library_root_dir("cycles") +"/lib/lib")
