@@ -162,6 +162,7 @@ if platform == "linux":
 	cycles_lib_dir = cyclesRoot +"/lib/linux_x64/"
 else:
 	cycles_lib_dir = cyclesRoot +"/lib/windows_x64/"
+# Note: These need to correspond to the CI workflows
 copy_prebuilt_directory(cycles_lib_dir +"alembic", "alembic")
 copy_prebuilt_directory(cycles_lib_dir +"embree", "embree")
 copy_prebuilt_directory(cycles_lib_dir +"jpeg", "jpeg")

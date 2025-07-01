@@ -37,6 +37,7 @@ if use_prebuilt_binaries:
 		subprocess.run(["git", "checkout", clone_commit_sha], check=True)
 
 	cycles_lib_dir = cycles_deps_dir +"/" +clone_dir_name
+	# Note: These need to correspond to the CI workflows
 	copy_prebuilt_directory(cycles_lib_dir +"/imath", "imath")
 	copy_prebuilt_directory(cycles_lib_dir +"/opencolorio", "opencolorio")
 	copy_prebuilt_directory(cycles_lib_dir +"/openimagedenoise", "openimagedenoise")
@@ -171,9 +172,9 @@ else:
 	print_msg("Downloading prebuilt cycles binaries...")
 	os.chdir(install_dir)
 
-	cycles_lib_dir = get_library_root_dir("cycles")
-	mkpath(cycles_lib_dir)
-	os.chdir(cycles_lib_dir)
+	staging_dir = get_staging_dir()
+	mkpath(staging_dir)
+	os.chdir(staging_dir)
 	install_prebuilt_binaries("https://github.com/Silverlan/UniRender_Cycles/releases/download/latest/")
 
 os.chdir(deps_dir)
