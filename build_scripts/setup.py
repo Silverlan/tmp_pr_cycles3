@@ -205,8 +205,9 @@ if platform == "win32":
 	cmake_configure("..",generator,["-DCMAKE_POLICY_VERSION_MINIMUM=4.0"])
 	cmake_build(build_config)
 
-	cp(glog_root +"/src/glog/log_severity.h",glog_root +"/build/glog/")
-	cp(glog_root +"/src/glog/platform.h",glog_root +"/build/glog/")
+	copy_prebuilt_headers(glog_root +"/src", "glog")
+	copy_prebuilt_headers(glog_root +"/build", "glog")
+	copy_prebuilt_binaries(glog_root +"/build/" +build_config, "glog")
 
 ########## gflags ##########
 if platform == "win32":
@@ -225,6 +226,9 @@ if platform == "win32":
 
 	cmake_configure("..",generator,["-DCMAKE_POLICY_VERSION_MINIMUM=4.0"])
 	cmake_build(build_config)
+
+	copy_prebuilt_headers(gflags_root +"/build_files/include", "gflags")
+	copy_prebuilt_binaries(gflags_root +"/build_files/lib/" +build_config, "gflags")
 
 ########## render_raytracing tool ##########
 if build_cycles:

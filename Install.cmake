@@ -22,9 +22,16 @@ if(PR_UNIRENDER_WITH_CYCLES)
     pr_install_component("UniRender_cycles")
 
     set(INSTALL_PATH_CYCLES "${INSTALL_PATH}/cycles")
-    set(cef_deps_install_dir "${PRAGMA_DEPS_DIR}/cycles")
-    pr_install_directory("${cef_deps_install_dir}/lib/" INSTALL_DIR "${INSTALL_PATH_CYCLES}" PATTERN "*" PATTERN "*.a" EXCLUDE)
-    pr_install_directory("${cef_deps_install_dir}/source/" INSTALL_DIR "${INSTALL_PATH_CYCLES}/source")
+    set(cycles_deps_install_dir "${PRAGMA_DEPS_DIR}/cycles")
+    if(UNIX)
+        pr_install_directory("${cycles_deps_install_dir}/lib/" INSTALL_DIR "${INSTALL_PATH_CYCLES}" PATTERN "*" PATTERN "*.a" EXCLUDE)
+    else()
+        pr_install_directory("${cycles_deps_install_dir}/bin/" INSTALL_DIR "${INSTALL_PATH_CYCLES}" PATTERN "*")
+
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/external_libs/cycles/cmake/modules")
+        pr_install_binaries(glog INSTALL_DIR "${INSTALL_PATH_CYCLES}")
+    endif()
+    pr_install_directory("${cycles_deps_install_dir}/source/" INSTALL_DIR "${INSTALL_PATH_CYCLES}/source")
 
 	# render_raytracing tool
 	pr_install_targets(render_raytracing render_raytracing_lib)

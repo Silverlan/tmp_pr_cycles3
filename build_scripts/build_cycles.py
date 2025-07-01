@@ -172,6 +172,8 @@ copy_prebuilt_directory(cycles_lib_dir +"openvdb", "openvdb")
 copy_prebuilt_directory(cycles_lib_dir +"png", "png")
 copy_prebuilt_directory(cycles_lib_dir +"tiff", "tiff")
 copy_prebuilt_directory(cycles_lib_dir +"zstd", "zstd")
+if platform == "win32":
+	copy_prebuilt_directory(cycles_lib_dir +"pugixml", "pugixml")
 
 copy_prebuilt_directory(cyclesRoot +"/third_party/atomic", dest_dir=get_library_include_dir("cycles"))
 copy_prebuilt_directory(cyclesRoot +"/third_party/cuew", dest_dir=get_library_include_dir("cycles"))
@@ -185,7 +187,8 @@ if platform == "win32":
 	cycles_build_lib_dir += "/RelWithDebInfo"
 copy_prebuilt_binaries(cycles_build_lib_dir, "cycles")
 copy_prebuilt_binaries(cyclesRoot +"/install/lib", "cycles")
-
+if platform == "win32":
+	copy_files(["*.dll"], cyclesRoot +"/install", get_library_root_dir("cycles") +"/bin")
 copy_files(["*.ptx", "*.cubin", "*.zst"], cyclesRoot +"/install/lib", get_library_root_dir("cycles") +"/lib/lib")
 
 copy_prebuilt_directory(cyclesRoot +"/install/source", dest_dir=get_library_root_dir("cycles") +"/source")
