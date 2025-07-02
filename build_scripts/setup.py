@@ -206,7 +206,7 @@ if platform == "win32":
 	cmake_build(build_config)
 
 	copy_prebuilt_headers(glog_root +"/src", "glog")
-	copy_prebuilt_headers(glog_root +"/build", "glog")
+	copy_prebuilt_headers(glog_root +"/build/glog", "glog")
 	copy_prebuilt_binaries(glog_root +"/build/" +build_config, "glog")
 
 ########## gflags ##########
