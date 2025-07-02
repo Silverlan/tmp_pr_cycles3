@@ -453,7 +453,12 @@ static pragma::scenekit::Socket register_input(lua_State *l, pragma::scenekit::G
 	return node.RegisterSocket(name, *value, ioType);
 }
 
-static pragma::scenekit::Socket register_output(lua_State *l, pragma::scenekit::GroupNodeDesc &node, pragma::scenekit::SocketType st, const std::string &name) { return node.RegisterSocket(name, pragma::scenekit::DataValue {st, nullptr}, pragma::scenekit::SocketIO::Out); }
+static pragma::scenekit::Socket register_output(lua_State *l, pragma::scenekit::GroupNodeDesc &node, pragma::scenekit::SocketType st, const std::string &name)
+{
+	pragma::scenekit::DataValue dv {};
+	dv.type = st;
+	return node.RegisterSocket(name, dv, pragma::scenekit::SocketIO::Out);
+}
 
 template<pragma::scenekit::SocketIO ioType>
 static void register_socket_methods(luabind::class_<pragma::scenekit::GroupNodeDesc, luabind::bases<pragma::scenekit::NodeDesc>> &defNode)
@@ -739,8 +744,8 @@ PRAGMA_EXPORT void pr_cycles_render_image(const pragma::rendering::cycles::Scene
 	if(scene == nullptr)
 		return;
 	auto aspectRatio = renderImageSettings.width / static_cast<float>(renderImageSettings.height);
-	initialize_cycles_scene_from_game_scene(*pragma::get_client_game()->GetScene(), *scene, renderImageInfo.camPose.GetOrigin(), renderImageInfo.camPose.GetRotation(), renderImageInfo.equirectPanorama, renderImageInfo.viewProjectionMatrix, renderImageInfo.nearZ, renderImageInfo.farZ, renderImageInfo.fov,
-	  aspectRatio, static_cast<SceneFlags>(renderImageSettings.sceneFlags), entFilter, nullptr, renderImageInfo.entityList);
+	initialize_cycles_scene_from_game_scene(*pragma::get_client_game()->GetScene(), *scene, renderImageInfo.camPose.GetOrigin(), renderImageInfo.camPose.GetRotation(), renderImageInfo.equirectPanorama, renderImageInfo.viewProjectionMatrix, renderImageInfo.nearZ, renderImageInfo.farZ,
+	  renderImageInfo.fov, aspectRatio, static_cast<SceneFlags>(renderImageSettings.sceneFlags), entFilter, nullptr, renderImageInfo.entityList);
 	scene->Finalize();
 	std::string err;
 	auto renderer = pragma::scenekit::Renderer::Create(**scene, renderImageSettings.renderer, err);
@@ -1094,8 +1099,7 @@ void PRAGMA_EXPORT pragma_initialize_lua(Lua::Interface &l)
 	defRenderer.def("Reset", static_cast<void (*)(lua_State *, pragma::modules::scenekit::Renderer &)>([](lua_State *l, pragma::modules::scenekit::Renderer &renderer) { renderer->Reset(); }));
 	defRenderer.def("StopRendering", static_cast<void (*)(lua_State *, pragma::modules::scenekit::Renderer &)>([](lua_State *l, pragma::modules::scenekit::Renderer &renderer) { renderer->StopRendering(); }));
 	defRenderer.def("ReloadShaders", static_cast<void (*)(lua_State *, pragma::modules::scenekit::Renderer &)>([](lua_State *l, pragma::modules::scenekit::Renderer &renderer) { renderer.ReloadShaders(); }));
-	defRenderer.def(
-	  "GetApiData", +[](lua_State *l, pragma::modules::scenekit::Renderer &renderer) { return renderer->GetApiData(); });
+	defRenderer.def("GetApiData", +[](lua_State *l, pragma::modules::scenekit::Renderer &renderer) { return renderer->GetApiData(); });
 	defRenderer.def("BeginSceneEdit", static_cast<bool (*)(lua_State *, pragma::modules::scenekit::Renderer &)>([](lua_State *l, pragma::modules::scenekit::Renderer &renderer) -> bool { return renderer->BeginSceneEdit(); }));
 	defRenderer.def("EndSceneEdit", static_cast<bool (*)(lua_State *, pragma::modules::scenekit::Renderer &)>([](lua_State *l, pragma::modules::scenekit::Renderer &renderer) -> bool { return renderer->EndSceneEdit(); }));
 	defRenderer.def(
@@ -1133,15 +1137,12 @@ void PRAGMA_EXPORT pragma_initialize_lua(Lua::Interface &l)
 		  }
 		  return renderer->SyncEditedActor(uuid);
 	  });
-	defRenderer.def(
-	  "FindActor", +[](lua_State *l, pragma::modules::scenekit::Renderer &renderer, const Lua::util::Uuid &uuid) -> pragma::scenekit::WorldObject * { return renderer->FindActor(uuid.value); });
+	defRenderer.def("FindActor", +[](lua_State *l, pragma::modules::scenekit::Renderer &renderer, const Lua::util::Uuid &uuid) -> pragma::scenekit::WorldObject * { return renderer->FindActor(uuid.value); });
 	defRenderer.def("GetScene",
 	  static_cast<std::shared_ptr<scenekit::Scene> (*)(lua_State *, pragma::modules::scenekit::Renderer &)>([](lua_State *l, pragma::modules::scenekit::Renderer &renderer) -> std::shared_ptr<scenekit::Scene> { return std::make_shared<scenekit::Scene>(renderer->GetScene()); }));
 	defRenderer.def("HasRenderedSamplesForAllTiles", static_cast<bool (*)(lua_State *, pragma::modules::scenekit::Renderer &)>([](lua_State *l, pragma::modules::scenekit::Renderer &renderer) -> bool { return renderer->GetTileManager().AllTilesHaveRenderedSamples(); }));
-	defRenderer.def(
-	  "IsBuildingKernels", +[](pragma::modules::scenekit::Renderer &renderer) { return renderer->IsBuildingKernels(); });
-	defRenderer.def(
-	  "IsFeatureAvailable", +[](pragma::modules::scenekit::Renderer &renderer, pragma::scenekit::Renderer::Feature feature) { return renderer->IsFeatureEnabled(feature); });
+	defRenderer.def("IsBuildingKernels", +[](pragma::modules::scenekit::Renderer &renderer) { return renderer->IsBuildingKernels(); });
+	defRenderer.def("IsFeatureAvailable", +[](pragma::modules::scenekit::Renderer &renderer, pragma::scenekit::Renderer::Feature feature) { return renderer->IsFeatureEnabled(feature); });
 	defRenderer.add_static_constant("FLAG_NONE", umath::to_integral(pragma::scenekit::Renderer::Flags::None));
 	defRenderer.add_static_constant("FLAG_ENABLE_LIVE_EDITING_BIT", umath::to_integral(pragma::scenekit::Renderer::Flags::EnableLiveEditing));
 	defRenderer.add_static_constant("FEATURE_FLAG_NONE", umath::to_integral(pragma::scenekit::Renderer::Feature::None));
@@ -2545,8 +2546,7 @@ void PRAGMA_EXPORT pragma_initialize_lua(Lua::Interface &l)
 	defScene.def("SetMaxGlossyBounces", static_cast<void (*)(lua_State *, scenekit::Scene &, uint32_t)>([](lua_State *l, scenekit::Scene &scene, uint32_t bounces) { scene->SetMaxGlossyBounces(bounces); }));
 	defScene.def("SetMaxTransmissionBounces", static_cast<void (*)(lua_State *, scenekit::Scene &, uint32_t)>([](lua_State *l, scenekit::Scene &scene, uint32_t bounces) { scene->SetMaxTransmissionBounces(bounces); }));
 	defScene.def("SetLightIntensityFactor", static_cast<void (*)(lua_State *, scenekit::Scene &, float)>([](lua_State *l, scenekit::Scene &scene, float factor) { scene->SetLightIntensityFactor(factor); }));
-	defScene.def(
-	  "SetAdaptiveSampling", +[](scenekit::Scene &scene, bool enabled, float adaptiveSamplingThreshold, uint32_t adaptiveMinSamples) { scene->SetAdaptiveSampling(enabled, adaptiveSamplingThreshold, adaptiveMinSamples); });
+	defScene.def("SetAdaptiveSampling", +[](scenekit::Scene &scene, bool enabled, float adaptiveSamplingThreshold, uint32_t adaptiveMinSamples) { scene->SetAdaptiveSampling(enabled, adaptiveSamplingThreshold, adaptiveMinSamples); });
 	defScene.def("Finalize", static_cast<void (*)(lua_State *, scenekit::Scene &)>([](lua_State *l, scenekit::Scene &scene) {
 		scene.Finalize();
 		scene->Finalize();
