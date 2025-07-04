@@ -3,6 +3,7 @@ import tarfile
 import subprocess
 import argparse
 import shutil
+import config
 from sys import platform
 from pathlib import Path
 
@@ -14,56 +15,57 @@ cycles_lib_linux_x64_commit_sha = "eacf548"
 use_prebuilt_binaries = True
 
 if use_prebuilt_binaries:
-	# Prebuilt Binaries
-	os.chdir(deps_dir)
-	cycles_deps_dir = deps_dir +"/cycles_dependencies"
+	if build_all:
+		# Prebuilt Binaries
+		os.chdir(deps_dir)
+		cycles_deps_dir = deps_dir +"/cycles_dependencies"
 
-	if platform == "linux":
-		clone_url = "https://projects.blender.org/blender/lib-linux_x64.git"
-		clone_dir_name = "lib-linux_x64"
-		clone_commit_sha = cycles_lib_linux_x64_commit_sha
-	else:
-		clone_url = "https://projects.blender.org/blender/lib-windows_x64.git"
-		clone_dir_name = "lib-windows_x64"
-		clone_commit_sha = cycles_lib_windows_x64_commit_sha
+		if platform == "linux":
+			clone_url = "https://projects.blender.org/blender/lib-linux_x64.git"
+			clone_dir_name = "lib-linux_x64"
+			clone_commit_sha = cycles_lib_linux_x64_commit_sha
+		else:
+			clone_url = "https://projects.blender.org/blender/lib-windows_x64.git"
+			clone_dir_name = "lib-windows_x64"
+			clone_commit_sha = cycles_lib_windows_x64_commit_sha
 
-	if not Path(cycles_deps_dir).is_dir():
-		print_msg("cycles_dependencies not found. Downloading...")
-		mkdir("cycles_dependencies", cd=True)
+		if not Path(cycles_deps_dir).is_dir():
+			print_msg("cycles_dependencies not found. Downloading...")
+			mkdir("cycles_dependencies", cd=True)
 
-		subprocess.run(["git", "clone", "--no-checkout", clone_url], check=True)
-		os.chdir(clone_dir_name)
-		subprocess.run(["git", "sparse-checkout", "set", "openimagedenoise/", "tbb/", "opencolorio/", "openimageio/", "opensubdiv/", "imath/"], check=True)
-		subprocess.run(["git", "checkout", clone_commit_sha], check=True)
+			subprocess.run(["git", "clone", "--no-checkout", clone_url], check=True)
+			os.chdir(clone_dir_name)
+			subprocess.run(["git", "sparse-checkout", "set", "openimagedenoise/", "tbb/", "opencolorio/", "openimageio/", "opensubdiv/", "imath/"], check=True)
+			subprocess.run(["git", "checkout", clone_commit_sha], check=True)
 
-	cycles_lib_dir = cycles_deps_dir +"/" +clone_dir_name
-	# Note: These need to correspond to the CI workflows
-	copy_prebuilt_directory(cycles_lib_dir +"/imath", "imath")
-	copy_prebuilt_directory(cycles_lib_dir +"/opencolorio", "opencolorio")
-	copy_prebuilt_directory(cycles_lib_dir +"/openimagedenoise", "openimagedenoise")
-	copy_prebuilt_directory(cycles_lib_dir +"/openimageio", "openimageio")
-	copy_prebuilt_directory(cycles_lib_dir +"/opensubdiv", "opensubdiv")
-	copy_prebuilt_directory(cycles_lib_dir +"/tbb", "tbb")
+		cycles_lib_dir = cycles_deps_dir +"/" +clone_dir_name
+		# Note: These need to correspond to the CI workflows
+		copy_prebuilt_directory(cycles_lib_dir +"/imath", "imath")
+		copy_prebuilt_directory(cycles_lib_dir +"/opencolorio", "opencolorio")
+		copy_prebuilt_directory(cycles_lib_dir +"/openimagedenoise", "openimagedenoise")
+		copy_prebuilt_directory(cycles_lib_dir +"/openimageio", "openimageio")
+		copy_prebuilt_directory(cycles_lib_dir +"/opensubdiv", "opensubdiv")
+		copy_prebuilt_directory(cycles_lib_dir +"/tbb", "tbb")
 
-	cycles_deps_dir = cycles_deps_dir +"/" +clone_dir_name
+		cycles_deps_dir = cycles_deps_dir +"/" +clone_dir_name
 
-	# OIDN
-	oidn_root = cycles_deps_dir +"/openimagedenoise"
+		# OIDN
+		oidn_root = cycles_deps_dir +"/openimagedenoise"
 
-	# TBB
-	tbb_root = cycles_deps_dir +"/tbb"
+		# TBB
+		tbb_root = cycles_deps_dir +"/tbb"
 
-	# OpenColorIO
-	ocio_root = cycles_deps_dir +"/opencolorio"
+		# OpenColorIO
+		ocio_root = cycles_deps_dir +"/opencolorio"
 
-	# Required by OpenColorIO
-	imath_root = cycles_deps_dir +"/imath"
+		# Required by OpenColorIO
+		imath_root = cycles_deps_dir +"/imath"
 
-	# OpenImageIO
-	oiio_root = cycles_deps_dir +"/openimageio"
+		# OpenImageIO
+		oiio_root = cycles_deps_dir +"/openimageio"
 
-	# OpenSubDiv
-	osd_root = cycles_deps_dir +"/opensubdiv"
+		# OpenSubDiv
+		osd_root = cycles_deps_dir +"/opensubdiv"
 else:
 	########## ISPC ##########
 	ispc_version = "v1.21.0"
@@ -188,13 +190,13 @@ if not Path(utilocio_root).is_dir():
 os.chdir(utilocio_root)
 reset_to_commit("7bb428df478e1c1eb66e16a1f78cf541f7dab056")
 
-########## glog ##########
-if platform == "win32":
+if platform == "win32" and build_all:
+	########## glog ##########
 	os.chdir(deps_dir)
 	glog_root = deps_dir +"/glog"
 	if not Path(glog_root).is_dir():
-	    print_msg("glog not found. Downloading...")
-	    git_clone("https://github.com/google/glog")
+		print_msg("glog not found. Downloading...")
+		git_clone("https://github.com/google/glog")
 
 	os.chdir(glog_root)
 	reset_to_commit("b33e3ba")
@@ -209,13 +211,12 @@ if platform == "win32":
 	copy_prebuilt_headers(glog_root +"/build", "glog")
 	copy_prebuilt_binaries(glog_root +"/build/" +build_config, "glog")
 
-########## gflags ##########
-if platform == "win32":
+	########## gflags ##########
 	os.chdir(deps_dir)
 	gflags_root = deps_dir +"/gflags"
 	if not Path(gflags_root).is_dir():
-	    print_msg("gflags not found. Downloading...")
-	    git_clone("https://github.com/gflags/gflags.git")
+		print_msg("gflags not found. Downloading...")
+		git_clone("https://github.com/gflags/gflags.git")
 
 	os.chdir(gflags_root)
 	# reset_to_commit("e171aa2") # Causes build errors for unknown reasons

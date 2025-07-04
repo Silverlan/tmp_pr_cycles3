@@ -4,6 +4,7 @@ from pathlib import Path
 from sys import platform
 import shutil
 import subprocess
+import config
 
 # To update Cycles to a newer version, follow these steps:
 # - Find the latest stable release on Cycles on https://github.com/blender/cycles/tags
