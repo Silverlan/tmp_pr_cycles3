@@ -188,7 +188,7 @@ if not Path(utilocio_root).is_dir():
     os.chdir(root +"/external_libs")
     git_clone("https://github.com/Silverlan/util_ocio.git","util_ocio")
 os.chdir(utilocio_root)
-reset_to_commit("7bb428df478e1c1eb66e16a1f78cf541f7dab056")
+reset_to_commit("6e068ccfda25cb99c76faf93867ecfd99556a522")
 
 if platform == "win32" and build_all:
 	########## glog ##########
@@ -249,4 +249,4 @@ if not Path(unirender_root).is_dir():
     git_clone("https://github.com/Silverlan/UniRender.git","util_raytracing")
 
 os.chdir(unirender_root)
-reset_to_commit("4fce3a62ae767e60a41b9d26b8116b9d8a5eb854")
+reset_to_commit("117472e5705b743a8a198c058aed1ed55d11b037")
